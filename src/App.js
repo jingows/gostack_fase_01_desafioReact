@@ -1,31 +1,50 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import api from "./services/api";
 
 import "./styles.css";
 
 function App() {
-  async function handleAddRepository() {
-    // TODO
-  }
+   const [repos, setRepos] = useState([]);
 
-  async function handleRemoveRepository(id) {
-    // TODO
-  }
+   useEffect(() => {
+      getRepos();
+   }, []);
 
-  return (
-    <div>
-      <ul data-testid="repository-list">
-        <li>
-          Repositório 1
+   async function getRepos() {
+      const { data } = await api.get("/repositories");
+      setRepos(data);
+   }
 
-          <button onClick={() => handleRemoveRepository(1)}>
-            Remover
-          </button>
-        </li>
-      </ul>
+   async function handleAddRepository() {
+      const repo = await api.post("repositories", {
+         title: `Desafio Reactjs ${Date.now()}`,
+         url: "https://github.com/Rocketseat/bootcamp-gostack-desafios/tree/master/desafio-conceitos-nodejs",
+         techs: ["Node.js", "UUID", "reactjs"],
+      });
+      setRepos([...repos, repo.data]);
+   }
 
-      <button onClick={handleAddRepository}>Adicionar</button>
-    </div>
-  );
+   async function handleRemoveRepository(id) {
+      await api.delete(`repositories/${id}`);
+      const reposIndex = repos.findIndex((repo) => repo.id === id);
+      repos.splice(reposIndex, 1);
+      setRepos([...repos]);
+   }
+
+   return (
+      <div>
+         <ul data-testid="repository-list">
+            {repos.map((repo) => (
+               <li key={repo.id}>
+                  {repo.title}
+                  <button onClick={() => handleRemoveRepository(repo.id)}>Remover</button>
+               </li>
+            ))}
+         </ul>
+
+         <button onClick={handleAddRepository}>Adicionar</button>
+      </div>
+   );
 }
 
 export default App;
